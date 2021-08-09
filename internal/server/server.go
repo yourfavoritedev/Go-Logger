@@ -31,8 +31,9 @@ const (
 )
 
 type Config struct {
-	CommitLog  CommitLog
-	Authorizer Authorizer
+	CommitLog   CommitLog
+	Authorizer  Authorizer
+	GetServerer GetServerer
 }
 
 type CommitLog interface {
@@ -163,7 +164,7 @@ func (s *grpcServer) ProduceStream(stream api.Log_ProduceStreamServer) error {
 	}
 }
 
-// ConsumeStream cfreates a server-side stream so clients can tell where in the logs to read the records.
+// ConsumeStream creates a server-side stream so clients can tell where in the logs to read the records.
 // The server will stream every record that follows.
 // When the server reaches the end of the log, it will wait until a new record is appended to the log,
 // and then it continues streaming record to the client.
@@ -191,6 +192,24 @@ func (s *grpcServer) ConsumeStream(req *api.ConsumeRequest, stream api.Log_Consu
 			req.Offset++
 		}
 	}
+}
+
+// GetServers returns the cluster's servers by calling the distributed log's GetServers method
+func (s *grpcServer) GetServers(
+	ctx context.Context, req *api.GetServersRequest,
+) (
+	*api.GetServersResponse, error,
+) {
+	// s.GetServerer is actually our distributed log which implements GetServers()
+	servers, err := s.GetServerer.GetServers()
+	if err != nil {
+		return nil, err
+	}
+	return &api.GetServersResponse{Servers: servers}, nil
+}
+
+type GetServerer interface {
+	GetServers() ([]*api.Server, error)
 }
 
 // authenticate reads the subject out of the client's cert and writes it to the RPC's context.
