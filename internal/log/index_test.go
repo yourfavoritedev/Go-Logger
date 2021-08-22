@@ -51,6 +51,6 @@ func TestIndex(t *testing.T) {
 	off, pos, err := idx.Read(-1)
 	require.NoError(t, err)
 
-	require.Equal(t, uint32(0), off)
-	require.Equal(t, entries[0].Pos, pos)
+	require.Equal(t, uint32(1), off)
+	require.Equal(t, entries[1].Pos, pos)
 }
